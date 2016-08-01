@@ -12,256 +12,6 @@
 //全方向からランダムは厳しいか？ (int型1〜4のランダム、1なら左から、2なら上からと分けるといいかも？)
 //
 //startボタン、ReStartボタンの実装    ok
-
-
-class Player{
-  float x = width/2;      //初期位置は画面中央
-  float y = height/2;
-  
-  int hp = 3;
-  int score = 0;
-  
-  void move(){
-    x = mouseX;          //Playerの移動はマウスを追いかける
-    y = mouseY;
-  }
-  
-  void draw(){
-      //多角形描画処理
-    beginShape();
-      vertex(x,y-13);
-      vertex(x-2,y-5);
-      vertex(x-13,y+13);
-      vertex(x-9,y+16);
-      vertex(x-7,y+13);
-      vertex(x,y+18);
-      vertex(x+7,y+13);
-      vertex(x+9,y+16);
-      vertex(x+13,y+13);
-      vertex(x+2,y-5);
-    endShape(CLOSE);
-    
-    if(mousePressed){
-      if(frameCount % 20 == 0){                    //マウスを押してる間0.5秒間隔でレーザー発射
-        laserShot();
-      }
-    }
-  }
-  
-  //Playerの攻撃処理
-  //アイテムを取ったらflg+1、最大3本までレーザー増える
-  void laserShot(){
-    switch(flg){
-      case 0:
-        laserList.add(new Laser(x, y, -90, 3, 20));    //正面1本
-        break;
-      
-      case 1:
-        laserList.add(new Laser(x, y, -75, 3, 20));    //正面30°に2本
-        laserList.add(new Laser(x, y, -105, 3, 20));
-        break;
-        
-      case 2:
-        laserList.add(new Laser(x, y, -90, 3, 20));    //正面15°ずつ3本
-        laserList.add(new Laser(x, y, -75, 3, 20));
-        laserList.add(new Laser(x, y, -105, 3, 20));
-        break;
-    }
-  }
-}
-
-class Laser{
-  float x;
-  float y;
-  float angle;
-  float speed = 3;
-  float angleSpeed = 0;
-  float w;
-  float h;
-  int flg;
-  
-  boolean hit = false;  //プレイヤーに当たったかを判定するフラグ(あたり判定時に使用)
-  boolean needRemove(){  //画面からはみ出るかプレイヤーに当たると弾削除
-    return x < 0 || x > width || y < 0 || y > height || hit;
-  }
-    
-  //初期値を渡せるコンストラクタ
-  Laser(float x, float y, float angle, float w, float h){    
-                  //プレーヤーのxy座標、発射角度、弾の幅と高さを受け取る
-    this.x = x;
-    this.y = y;
-    this.angle = angle;
-    this.w = w;
-    this.h = h;
-
-  }
-  
-  void move(){
-    x += cos(radians(angle)) * speed;
-    y += sin(radians(angle)) * speed;
-  }
-  
-  void draw(){
-    rect(x-w/2, y-h/2, w, h);
-  }
-}
-
-class Enemy{
-  float x;
-  float y;
-  float xSpeed;
-  float ySpeed;
-  int i;
-  
-  int hp = 3;
-  
-  
-  boolean hit = false;
-  boolean needRemove(){
-    return x < 0 || x > width || y < 0 || y > height || hit;
-  }
-  
-  
-  Enemy(float Ex, float xSpeed, float ySpeed){    //random生成された出現x座標、x・yの増加スピード受け取ってる
-    x = Ex;
-    y = 0;
-    this.xSpeed = xSpeed;
-    this.ySpeed = ySpeed;
-  }
-  
-  void move(){
-    x += xSpeed;            //xをxspeedずつ増加させる
-    y += ySpeed;            //yをySpeedずつ増加させる
-    if(x+10 > width){
-      xSpeed *= -1;        //敵の半分が画面から出たら-1をかけて跳ね返らせる
-    }else if(x-10 < 0){
-      xSpeed *= -1;        
-    }
-  }
-  
-  void draw(){
-    beginShape();
-      vertex(x,y+13);
-      vertex(x-2,y+5);
-      vertex(x-13,y-13);
-      vertex(x-9,y-16);
-      vertex(x-7,y-13);
-      vertex(x,y-18);
-      vertex(x+7,y-13);
-      vertex(x+9,y-16);
-      vertex(x+13,y-13);
-      vertex(x+2,y+5);
-    endShape(CLOSE);
-    float rnd = random(200);
-      //Laserが強化されるにつれてbullet増加
-    if(flg == 0){
-      if(rnd < 1){
-        bulletShot();
-      }
-    }else if(flg == 1){
-      if(rnd < 2){
-        bulletShot();
-      }
-    }else if(flg == 2){
-      if(rnd < 4){
-        bulletShot();
-      }
-    }
-  }
-  
-  void bulletShot(){
-       //敵の弾の速さは4〜7のランダム
-   i = int(random(4,8));
-       //敵のxy座標、弾のスピードをコンストラクタに渡す
-   bulletList.add(new Bullet(x, y,i));
-  }
-  
-  void itemAppear(){
-   itemList.add(new Item(x,y)); 
-  }
-}
-
-
-
-class Bullet{
-  float x;
-  float y;
-  float speed;
-  
-  boolean hit = false;
-  boolean needRemove(){  //画面からはみ出るかプレイヤーに当たると弾削除
-    return x < 0 || x > width || y < 0 || y > height || hit;
-  }
-  
-  Bullet(float x, float y, float speed){    //敵のxy座標を受け取るコンストラクタ
-    this.x = x;
-    this.y = y;
-    this.speed = speed;
-  }
-  
-  void move(){
-    y += speed;        //弾のスピード、5ずつ増加
-  }
-  
-  void draw(){
-   ellipse(x, y, 7, 7); 
-  }
-}
-
-
-//class Boss{
-//  float x;
-//  float y;
-//  
-//  int Bhp = 40;
-//  
-//  
-//  boolean hit = false;
-//  boolean needRemove(){  //画面からはみ出るかHPが0になると弾削除
-//    return x < 0 || x > width || y < 0 || y > height || hit;
-//  }
-//  
-//  Boss(float x, float y){
-//    this.x = x;
-//    this.y = y;
-//  }
-//  
-//  void move(){
-//      y += 2;
-//  }
-//  
-//  void draw(){
-//    ellipse(x,y,150,100);
-//  }
-//}
-
-
-
-class Item{
-  float x;
-  float y;
-  float w = 10;
-  float h = 10;
-  
-  boolean hit = false;  //プレイヤーに当たったかを判定するフラグ(あたり判定時に使用)
-  boolean needRemove(){  //画面からはみ出るかプレイヤーに当たるとアイテム削除
-    return x < 0 || x > width || y < 0 || y > height || hit;
-  }
-  
-  Item(float x, float y){
-    this.x = x;
-    this.y = y;
-  }
-  
-  void move(){
-    y += 3;
-  }
-  
-  void draw(){
-    rect(x,y,10,10);
-  }
-}
-
     
 
 ArrayList<Laser> laserList;
@@ -273,6 +23,7 @@ Player player;
 //Boss boss;
 
 PImage img;
+PImage enemy;
 
 int flg;      //アイテム入手すると+1する。弾強化処理
 int n;        //撃墜数記録変数
@@ -313,6 +64,7 @@ void setup(){
   Hscore = 0;
   
   img = loadImage("map.png");
+  enemy = loadImage("enemy.png");
   
 }
 
@@ -383,26 +135,6 @@ void draw(){
         Laser laser = laserList.get(i);
         laser.move();
         laser.draw();
-        
-  //      for(int t = enemyList.size()-1; t >= 0; t--){
-  //        Enemy enemy = enemyList.get(t);
-  //        if(collision(laser.x, laser.y, 3, 15, enemy.x, enemy.y, 20, 20)){
-  //            //laserがenemyに当たったらenemyのHPを1ずつ減らす
-  //          enemy.hp--;
-  //            //0になったらtrueを返してRemoveする
-  //          if(enemy.hp == 0){
-  //            enemy.hit = true;
-  //            player.score += 10;        //敵を倒す度にscoreを10ずつ増加
-  //            int rnd = int(random(1,20));
-  //            if(rnd == 5){
-  //              enemy.itemAppear();
-  //            }
-  //          }
-  //          laser.hit = true;
-  //        }
-  //      }
-  //      
-  //      if(laser.needRemove())laserList.remove(i);      //画面外に出たレーザーを消去
       }
       
       //敵の出現処理
@@ -433,7 +165,7 @@ void draw(){
           enemy.draw();
           
           //enemyとplayerとの当たり判定
-          if(collision(player.x, player.y, 20, 20, enemy.x, enemy.y, 20, 20)){
+          if(collision(player.x, player.y, 20, 20, enemy.x+15, enemy.y+15, 35, 25)){
             enemy.hit = true;
             player.hp--;
             flg = 0;
@@ -445,7 +177,7 @@ void draw(){
           //enemyとlaserの当たり判定
           for(int l = laserList.size()-1; l >= 0; l--){
             Laser laser = laserList.get(l);
-            if(collision(laser.x, laser.y, 3, 15, enemy.x, enemy.y, 20, 20)){
+            if(collision(laser.x, laser.y, 3, 15, enemy.x+15, enemy.y+15, 35, 25)){
                 //laserがenemyに当たったらenemyのHPを1ずつ減らす
               enemy.hp--;
                 //0になったらtrueを返してRemoveする
@@ -460,19 +192,22 @@ void draw(){
               }
               laser.hit = true;
                   //ダメージエフェクト
+                  
+              //image(enemy,enemy.x,enemy.y,50,50);
               fill(255);
-              beginShape();
-                vertex(enemy.x,enemy.y+13);
-                vertex(enemy.x-2,enemy.y+5);
-                vertex(enemy.x-13,enemy.y-13);
-                vertex(enemy.x-9,enemy.y-16);
-                vertex(enemy.x-7,enemy.y-13);
-                vertex(enemy.x,enemy.y-18);
-                vertex(enemy.x+7,enemy.y-13);
-                vertex(enemy.x+9,enemy.y-16);
-                vertex(enemy.x+13,enemy.y-13);
-                vertex(enemy.x+2,enemy.y+5);
-              endShape(CLOSE);
+              rect(enemy.x+15,enemy.y+15,35,25);
+              //beginShape();
+              //  vertex(enemy.x,enemy.y+13);
+              //  vertex(enemy.x-2,enemy.y+5);
+              //  vertex(enemy.x-13,enemy.y-13);
+              //  vertex(enemy.x-9,enemy.y-16);
+              //  vertex(enemy.x-7,enemy.y-13);
+              //  vertex(enemy.x,enemy.y-18);
+              //  vertex(enemy.x+7,enemy.y-13);
+              //  vertex(enemy.x+9,enemy.y-16);
+              //  vertex(enemy.x+13,enemy.y-13);
+              //  vertex(enemy.x+2,enemy.y+5);
+              //endShape(CLOSE);
             }      
           if(laser.needRemove())laserList.remove(l);      //画面外、敵に当たったレーザーを消去
           }
